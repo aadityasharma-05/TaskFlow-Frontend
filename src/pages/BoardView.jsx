@@ -147,26 +147,26 @@ const BoardView = () => {
     <div className="h-full flex flex-col bg-white overflow-hidden relative">
       
       {/* Top Breadcrumb & Toolbar */}
-      <header className="flex-none px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white z-10">
+      <header className="flex-none px-4 sm:px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white z-10">
         
         {/* Breadcrumb */}
-        <div className="flex items-center text-sm">
-          <Link to="/" className="text-gray-500 hover:text-gray-900 transition-colors flex items-center">
+        <div className="flex items-center text-sm w-full overflow-x-auto pb-1 sm:pb-0 custom-scrollbar-hide">
+          <Link to="/" className="text-gray-500 hover:text-gray-900 transition-colors flex items-center flex-shrink-0">
             <span className="w-5 h-5 bg-gray-100 rounded flex items-center justify-center mr-2 text-[10px] font-bold text-gray-600">
               U
             </span>
             Workspace
           </Link>
-          <ChevronRight className="w-3.5 h-3.5 mx-1.5 text-gray-400" />
-          <div className="flex items-center font-semibold text-gray-900 bg-gray-50 px-2 py-1 rounded border border-gray-100 shadow-sm">
+          <ChevronRight className="w-3.5 h-3.5 mx-1.5 text-gray-400 flex-shrink-0" />
+          <div className="flex items-center font-semibold text-gray-900 bg-gray-50 px-2 py-1 rounded border border-gray-100 shadow-sm whitespace-nowrap">
             <Hash className="w-3.5 h-3.5 mr-1.5 text-gray-400" />
             {board.title}
           </div>
         </div>
 
         {/* Toolbar */}
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <div className="relative">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+          <div className="relative flex-1 sm:flex-none">
             <Search className="h-3.5 w-3.5 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"

@@ -80,7 +80,7 @@ const Dashboard = () => {
   return (
     <div className="flex-1 overflow-y-auto bg-white custom-scrollbar h-full">
       {/* Header */}
-      <header className="px-8 py-6 border-b border-gray-100 flex justify-between items-end sticky top-0 bg-white/90 backdrop-blur-md z-10">
+      <header className="px-4 sm:px-8 py-6 border-b border-gray-100 flex justify-between items-end sticky top-0 bg-white/90 backdrop-blur-md z-10">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center">
             <LayoutDashboard className="w-6 h-6 mr-3 text-gray-400" />
@@ -89,14 +89,15 @@ const Dashboard = () => {
         </div>
         <button
           onClick={() => setIsCreating(true)}
-          className="flex items-center px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800 transition-colors shadow-sm"
+          className="flex items-center px-3 py-1.5 sm:px-4 sm:py-2 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800 transition-colors shadow-sm whitespace-nowrap"
         >
-          <Plus className="h-4 w-4 mr-1.5" />
-          New Project
+          <Plus className="h-4 w-4 mr-1 sm:mr-1.5" />
+          <span className="hidden sm:inline">New Project</span>
+          <span className="sm:hidden">New</span>
         </button>
       </header>
 
-      <main className="max-w-6xl mx-auto px-8 py-8 space-y-8">
+      <main className="max-w-6xl mx-auto px-4 sm:px-8 py-8 space-y-8">
         
         {/* Create Board Inline Form */}
         {isCreating && (
