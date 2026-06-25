@@ -14,15 +14,15 @@ TaskFlow is a beautiful, highly interactive Kanban board application with AI-pow
 
 - **Dashboard - Analytics Overview:**
   
-  ![Dashboard Analytics](screenshots/DashBoredView.png.png)
+  ![Dashboard Analytics](screenshots/DashBoredView.png)
 
 - **Dashboard - Projects & Boards:**
   
-  ![Dashboard Boards](screenshots/DashBoredView.png.png)
+  ![Dashboard Boards](screenshots/DashBoredView.png)
 
 - **Board View (Drag & Drop):**
   
-  ![Board View](screenshots/BoredView.png.png)
+  ![Board View](screenshots/BoredView.png)
 
 - **AI Task Estimator Modal:**
   
