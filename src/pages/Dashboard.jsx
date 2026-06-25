@@ -3,11 +3,11 @@ import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../lib/axios';
 import { useAuth } from '../contexts/AuthContext';
-import { LogOut, Plus, Trash2, LayoutDashboard, Sparkles, Folder, BarChart3, CheckCircle2, Clock, Circle, ArrowRight } from 'lucide-react';
+import { Plus, Trash2, Folder, BarChart3, CheckCircle2, Clock, Circle, LayoutDashboard, ArrowRight } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 
 const Dashboard = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [newBoardTitle, setNewBoardTitle] = useState('');
   const [isCreating, setIsCreating] = useState(false);
@@ -62,8 +62,8 @@ const Dashboard = () => {
   const doneCount = tasks.filter(t => t.status === 'done').length;
 
   const statusData = [
-    { name: 'To Do', value: todoCount, color: '#6366f1' }, 
-    { name: 'In Progress', value: inProgressCount, color: '#eab308' }, 
+    { name: 'To Do', value: todoCount, color: '#94a3b8' }, 
+    { name: 'In Progress', value: inProgressCount, color: '#f59e0b' }, 
     { name: 'Done', value: doneCount, color: '#10b981' } 
   ].filter(d => d.value > 0);
 
@@ -78,243 +78,192 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col relative overflow-hidden">
-      {/* Background Decor */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-300 rounded-full mix-blend-multiply filter blur-[100px] opacity-70"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-300 rounded-full mix-blend-multiply filter blur-[100px] opacity-70"></div>
-
-      {/* Navbar */}
-      <nav className="glass-panel sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            <div className="flex items-center">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mr-3 shadow-lg shadow-indigo-200">
-                <LayoutDashboard className="h-6 w-6 text-white" strokeWidth={2.5} />
-              </div>
-              <span className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 font-heading">
-                TaskFlow
-              </span>
-            </div>
-            <div className="flex items-center space-x-6">
-              <div className="flex items-center bg-white/50 px-4 py-1.5 rounded-full shadow-sm border border-white/60">
-                <span className="text-sm font-semibold text-slate-700">{user?.name}</span>
-              </div>
-              <button 
-                onClick={logout}
-                className="flex items-center text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors p-2 rounded-xl"
-                title="Logout"
-              >
-                <LogOut className="h-5 w-5" strokeWidth={2.5} />
-              </button>
-            </div>
-          </div>
+    <div className="flex-1 overflow-y-auto bg-white custom-scrollbar h-full">
+      {/* Header */}
+      <header className="px-8 py-6 border-b border-gray-100 flex justify-between items-end sticky top-0 bg-white/90 backdrop-blur-md z-10">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center">
+            <LayoutDashboard className="w-6 h-6 mr-3 text-gray-400" />
+            Overview
+          </h1>
         </div>
-      </nav>
+        <button
+          onClick={() => setIsCreating(true)}
+          className="flex items-center px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800 transition-colors shadow-sm"
+        >
+          <Plus className="h-4 w-4 mr-1.5" />
+          New Project
+        </button>
+      </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-1 relative z-10 w-full space-y-12">
+      <main className="max-w-6xl mx-auto px-8 py-8 space-y-8">
         
-        {/* Hero Section */}
-        <div className="flex flex-col sm:flex-row justify-between items-end mb-8">
-          <div>
-            <h1 className="text-4xl sm:text-5xl font-extrabold text-slate-900 font-heading mb-3 tracking-tight">
-              Welcome back, <span className="text-indigo-600">{user?.name?.split(' ')[0]}</span> 👋
-            </h1>
-            <p className="text-lg text-slate-500 font-medium">Here's what's happening across your projects today.</p>
-          </div>
-          <button
-            onClick={() => setIsCreating(true)}
-            className="mt-6 sm:mt-0 flex items-center px-6 py-3 bg-indigo-600 text-white font-semibold rounded-2xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 hover:-translate-y-0.5"
-          >
-            <Plus className="h-5 w-5 mr-2" strokeWidth={2.5} />
-            Create Project
-          </button>
-        </div>
-
-        {/* Analytics Section */}
-        {!tasksLoading && tasks.length > 0 && (
-          <section>
-            <div className="flex items-center mb-6">
-              <BarChart3 className="w-6 h-6 mr-2 text-indigo-500" strokeWidth={2.5} />
-              <h2 className="text-2xl font-bold font-heading text-slate-800 tracking-tight">Activity Overview</h2>
-            </div>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Quick Stats */}
-              <div className="glass rounded-3xl p-6 flex flex-col justify-between">
-                <div>
-                  <h3 className="text-sm font-bold text-slate-500 mb-4 uppercase tracking-wider">Task Breakdown</h3>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="flex items-center text-slate-600 font-semibold"><Circle className="w-4 h-4 mr-2 text-indigo-500" /> To Do</span>
-                      <span className="font-bold text-lg">{todoCount}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="flex items-center text-slate-600 font-semibold"><Clock className="w-4 h-4 mr-2 text-amber-500" /> In Progress</span>
-                      <span className="font-bold text-lg">{inProgressCount}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="flex items-center text-slate-600 font-semibold"><CheckCircle2 className="w-4 h-4 mr-2 text-emerald-500" /> Done</span>
-                      <span className="font-bold text-lg">{doneCount}</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-6 pt-4 border-t border-slate-100">
-                  <div className="flex justify-between items-end">
-                    <span className="font-semibold text-slate-500">Total Tasks</span>
-                    <span className="text-4xl font-extrabold text-slate-900 font-heading">{tasks.length}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Status Pie Chart */}
-              <div className="glass rounded-3xl p-6 lg:col-span-1 flex flex-col items-center justify-center">
-                <h3 className="text-sm font-bold text-slate-500 mb-2 uppercase tracking-wider self-start">Status</h3>
-                <div className="h-48 w-full mt-2">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={statusData}
-                        innerRadius={60}
-                        outerRadius={80}
-                        paddingAngle={5}
-                        dataKey="value"
-                        stroke="none"
-                      >
-                        {statusData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip 
-                        contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-
-              {/* Priority Bar Chart */}
-              <div className="glass rounded-3xl p-6 lg:col-span-1 flex flex-col justify-center">
-                <h3 className="text-sm font-bold text-slate-500 mb-4 uppercase tracking-wider">Priorities</h3>
-                <div className="h-48 w-full mt-2">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={priorityData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
-                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} allowDecimals={false} />
-                      <Tooltip 
-                        cursor={{ fill: '#f8fafc' }}
-                        contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                      />
-                      <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                        {priorityData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
-
         {/* Create Board Inline Form */}
         {isCreating && (
-          <div className="glass rounded-3xl p-6 animate-in fade-in slide-in-from-top-4 duration-300 shadow-xl border border-indigo-100">
-            <h3 className="font-bold text-lg mb-4 text-slate-800">Create New Project</h3>
-            <form onSubmit={handleCreate} className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <input
-                  type="text"
-                  autoFocus
-                  value={newBoardTitle}
-                  onChange={(e) => setNewBoardTitle(e.target.value)}
-                  placeholder="Project name..."
-                  className="w-full px-5 py-3 rounded-2xl border border-gray-200 bg-white focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none"
-                />
-              </div>
-              <div className="flex gap-3">
-                <button
-                  type="submit"
-                  disabled={createBoard.isPending || !newBoardTitle.trim()}
-                  className="flex-1 sm:flex-none bg-indigo-600 text-white font-semibold py-3 px-6 rounded-2xl hover:bg-indigo-700 transition-colors shadow-md disabled:opacity-70"
-                >
-                  {createBoard.isPending ? 'Creating...' : 'Create Project'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsCreating(false);
-                    setNewBoardTitle('');
-                  }}
-                  className="flex-1 sm:flex-none bg-white border border-gray-200 text-gray-700 font-semibold py-3 px-6 rounded-2xl hover:bg-gray-50 transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
+          <div className="bg-[#FBFBFC] rounded-xl p-5 border border-gray-200">
+            <form onSubmit={handleCreate} className="flex gap-3">
+              <input
+                type="text"
+                autoFocus
+                value={newBoardTitle}
+                onChange={(e) => setNewBoardTitle(e.target.value)}
+                placeholder="Project name..."
+                className="flex-1 px-4 py-2 rounded-md border border-gray-300 bg-white focus:ring-1 focus:ring-gray-900 focus:border-gray-900 transition-all outline-none text-sm"
+              />
+              <button
+                type="submit"
+                disabled={createBoard.isPending || !newBoardTitle.trim()}
+                className="bg-gray-900 text-white text-sm font-medium py-2 px-5 rounded-md hover:bg-gray-800 transition-colors disabled:opacity-50"
+              >
+                {createBoard.isPending ? 'Creating...' : 'Create'}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setIsCreating(false); setNewBoardTitle(''); }}
+                className="bg-white border border-gray-300 text-gray-700 text-sm font-medium py-2 px-5 rounded-md hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
             </form>
           </div>
         )}
 
-        {/* Boards Section */}
-        <section className="pt-4">
-          <div className="flex items-center mb-6">
-            <Folder className="w-6 h-6 mr-2 text-indigo-500" strokeWidth={2.5} />
-            <h2 className="text-2xl font-bold font-heading text-slate-800 tracking-tight">Your Boards</h2>
+        {/* Analytics Grid */}
+        {!tasksLoading && tasks.length > 0 && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            {/* Summary Widget */}
+            <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm flex flex-col justify-between hover:border-gray-300 transition-colors">
+              <div>
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4 flex items-center">
+                  <BarChart3 className="w-4 h-4 mr-1.5" /> Status Breakdown
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center text-sm text-gray-600"><Circle className="w-3.5 h-3.5 mr-2 text-slate-400" /> To Do</span>
+                    <span className="font-semibold text-gray-900">{todoCount}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center text-sm text-gray-600"><Clock className="w-3.5 h-3.5 mr-2 text-amber-500" /> In Progress</span>
+                    <span className="font-semibold text-gray-900">{inProgressCount}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center text-sm text-gray-600"><CheckCircle2 className="w-3.5 h-3.5 mr-2 text-emerald-500" /> Done</span>
+                    <span className="font-semibold text-gray-900">{doneCount}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-6 pt-4 border-t border-gray-100 flex justify-between items-end">
+                <span className="text-sm font-medium text-gray-500">Total Tasks</span>
+                <span className="text-2xl font-bold text-gray-900">{tasks.length}</span>
+              </div>
+            </div>
+
+            {/* Status Pie Chart */}
+            <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:border-gray-300 transition-colors">
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Completion</h3>
+              <div className="h-40 w-full mt-2">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={statusData}
+                      innerRadius={50}
+                      outerRadius={70}
+                      paddingAngle={2}
+                      dataKey="value"
+                      stroke="none"
+                    >
+                      {statusData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '12px' }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Priority Bar Chart */}
+            <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:border-gray-300 transition-colors">
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Priorities</h3>
+              <div className="h-40 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={priorityData} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748b' }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748b' }} allowDecimals={false} />
+                    <Tooltip 
+                      cursor={{ fill: '#f8fafc' }}
+                      contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '12px' }}
+                    />
+                    <Bar dataKey="value" radius={[2, 2, 0, 0]} barSize={30}>
+                      {priorityData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Projects Section */}
+        <section>
+          <div className="flex items-center justify-between mb-4 mt-8">
+            <h2 className="text-lg font-bold text-gray-900 tracking-tight">Active Projects</h2>
           </div>
           
           {boardsLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {[...Array(3)].map((_, i) => (
-                <div key={i} className="h-40 bg-white/40 rounded-3xl animate-pulse"></div>
+                <div key={i} className="h-32 bg-gray-100 rounded-xl animate-pulse"></div>
               ))}
             </div>
           ) : error ? (
-            <div className="bg-red-50 text-red-500 text-center py-10 rounded-3xl border border-red-100">Failed to load boards.</div>
+            <div className="p-4 bg-red-50 text-red-600 rounded-lg text-sm border border-red-100">Failed to load boards.</div>
           ) : boards?.length === 0 ? (
-            <div className="text-center py-20 bg-white/50 backdrop-blur-sm rounded-3xl border border-dashed border-gray-300">
-              <div className="w-20 h-20 rounded-full bg-indigo-50 flex items-center justify-center mx-auto mb-6 shadow-inner">
-                <Sparkles className="w-10 h-10 text-indigo-400" strokeWidth={2.5} />
-              </div>
-              <h3 className="text-2xl font-bold text-gray-800 mb-2">No projects yet</h3>
-              <p className="text-gray-500 mb-8">Create your first project board to get started.</p>
+            <div className="text-center py-16 bg-[#FBFBFC] rounded-xl border border-dashed border-gray-300">
+              <Folder className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+              <h3 className="text-sm font-semibold text-gray-900 mb-1">No projects yet</h3>
+              <p className="text-xs text-gray-500 mb-4">Create your first project to organize your tasks.</p>
               <button
                 onClick={() => setIsCreating(true)}
-                className="bg-indigo-600 text-white font-semibold py-3 px-8 rounded-full hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
+                className="bg-gray-900 text-white text-sm font-medium py-2 px-4 rounded-md hover:bg-gray-800 transition-colors shadow-sm"
               >
-                Create First Project
+                Create Project
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {boards?.map((board) => (
-                <div key={board._id} className="glass rounded-3xl p-6 group hover:-translate-y-1 transition-all duration-300 hover:shadow-2xl hover:shadow-indigo-500/10 relative">
-                  <Link to={`/boards/${board._id}`} className="block h-full">
-                    <div className="flex items-start justify-between mb-6">
-                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center text-indigo-500 shadow-sm border border-indigo-100/50">
-                        <Folder className="w-6 h-6" strokeWidth={2.5} />
-                      </div>
+                <Link 
+                  to={`/boards/${board._id}`} 
+                  key={board._id} 
+                  className="group block bg-white rounded-xl border border-gray-200 p-5 hover:border-gray-300 hover:shadow-sm transition-all relative"
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="w-8 h-8 rounded-md bg-gray-100 flex items-center justify-center text-gray-600 border border-gray-200">
+                      <Folder className="w-4 h-4" />
                     </div>
-                    <h3 className="text-xl font-bold text-gray-800 mb-2 font-heading">{board.title}</h3>
-                    <p className="text-sm text-indigo-600 font-semibold mt-6 opacity-0 group-hover:opacity-100 transition-opacity flex items-center">
-                      Open workspace <ArrowRight className="w-4 h-4 ml-1" />
-                    </p>
-                  </Link>
-
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (confirm('Delete this board?')) {
-                        deleteBoard.mutate(board._id);
-                      }
-                    }}
-                    className="absolute top-6 right-6 p-2 rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
-                    title="Delete board"
-                  >
-                    <Trash2 className="h-5 w-5" />
-                  </button>
-                </div>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (confirm('Delete this project?')) {
+                          deleteBoard.mutate(board._id);
+                        }
+                      }}
+                      className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors opacity-0 group-hover:opacity-100"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <h3 className="font-semibold text-gray-900 mb-1 truncate">{board.title}</h3>
+                  <div className="flex items-center text-xs text-gray-500 mt-4 group-hover:text-gray-900 transition-colors">
+                    View project <ArrowRight className="w-3 h-3 ml-1" />
+                  </div>
+                </Link>
               ))}
             </div>
           )}

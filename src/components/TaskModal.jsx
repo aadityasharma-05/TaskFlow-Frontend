@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../lib/axios';
-import { X, Sparkles, Loader2, Bot } from 'lucide-react';
+import { X, Sparkles, Loader2, Bot, CalendarDays, AlignLeft, Flag } from 'lucide-react';
 
 const TaskModal = ({ isOpen, onClose, boardId, taskToEdit }) => {
   const queryClient = useQueryClient();
@@ -11,20 +11,20 @@ const TaskModal = ({ isOpen, onClose, boardId, taskToEdit }) => {
     status: 'todo',
     priority: 'med',
     dueDate: '',
-    estimatedEffort: '',
+    estimatedEffort: ''
   });
-
-  const [aiError, setAiError] = useState('');
+  
+  const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
     if (taskToEdit) {
       setFormData({
-        title: taskToEdit.title,
+        title: taskToEdit.title || '',
         description: taskToEdit.description || '',
-        status: taskToEdit.status,
-        priority: taskToEdit.priority,
+        status: taskToEdit.status || 'todo',
+        priority: taskToEdit.priority || 'med',
         dueDate: taskToEdit.dueDate ? taskToEdit.dueDate.split('T')[0] : '',
-        estimatedEffort: taskToEdit.estimatedEffort || '',
+        estimatedEffort: taskToEdit.estimatedEffort || ''
       });
     } else {
       setFormData({
@@ -33,7 +33,7 @@ const TaskModal = ({ isOpen, onClose, boardId, taskToEdit }) => {
         status: 'todo',
         priority: 'med',
         dueDate: '',
-        estimatedEffort: '',
+        estimatedEffort: ''
       });
     }
   }, [taskToEdit, isOpen]);
@@ -41,173 +41,205 @@ const TaskModal = ({ isOpen, onClose, boardId, taskToEdit }) => {
   const saveTask = useMutation({
     mutationFn: async (data) => {
       if (taskToEdit) {
-        return await api.put(`/tasks/${taskToEdit._id}`, data);
+        await api.put(`/tasks/${taskToEdit._id}`, data);
       } else {
-        return await api.post('/tasks', { ...data, board: boardId });
+        await api.post('/tasks', { ...data, boardId });
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['tasks', boardId]);
-      queryClient.invalidateQueries(['allTasks']); 
+      queryClient.invalidateQueries(['allTasks']);
       onClose();
     }
   });
 
-  const suggestEstimate = useMutation({
+  const deleteTask = useMutation({
+    mutationFn: async () => {
+      if (taskToEdit) {
+        await api.delete(`/tasks/${taskToEdit._id}`);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['tasks', boardId]);
+      queryClient.invalidateQueries(['allTasks']);
+      onClose();
+    }
+  });
+
+  const generateEstimates = useMutation({
     mutationFn: async () => {
       const res = await api.post('/tasks/suggest-estimate', {
         title: formData.title,
-        description: formData.description,
+        description: formData.description
       });
       return res.data;
     },
     onSuccess: (data) => {
-      setFormData(prev => ({
-        ...prev,
-        estimatedEffort: data.estimatedEffort,
-        dueDate: data.dueDate,
-      }));
-      setAiError('');
+      if (data.suggestion) {
+        let parsed;
+        try {
+          parsed = JSON.parse(data.suggestion);
+          setFormData(prev => ({
+            ...prev,
+            estimatedEffort: parsed.estimatedEffort || prev.estimatedEffort,
+            dueDate: parsed.dueDate || prev.dueDate
+          }));
+        } catch (e) {
+          console.error("Failed to parse Groq suggestion", e);
+        }
+      }
+      setIsGenerating(false);
     },
     onError: () => {
-      setAiError('AI engine failed to compute.');
+      setIsGenerating(false);
     }
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!formData.title.trim()) return;
     saveTask.mutate(formData);
+  };
+
+  const handleGenerateClick = () => {
+    if (!formData.title) return;
+    setIsGenerating(true);
+    generateEstimates.mutate();
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 overflow-hidden flex justify-end">
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
+        className="absolute inset-0 bg-gray-900/20 backdrop-blur-sm transition-opacity"
         onClick={onClose}
-      ></div>
+      />
 
-      {/* Modal */}
-      <div className="bg-white/95 backdrop-blur-xl w-full max-w-2xl rounded-3xl shadow-2xl relative z-10 max-h-[90vh] flex flex-col overflow-hidden border border-white/50 animate-in fade-in zoom-in-95 duration-200">
+      {/* Drawer */}
+      <div className="relative w-full max-w-md h-full bg-white shadow-2xl flex flex-col animate-slide-in-right">
         
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-white/50">
-          <h2 className="text-xl font-bold text-gray-900 font-heading">
-            {taskToEdit ? 'Edit Task' : 'New Task'}
-          </h2>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <div className="flex items-center gap-2">
+            <span className="bg-gray-100 text-gray-600 text-[10px] font-mono px-2 py-0.5 rounded">
+              {taskToEdit ? `T-${taskToEdit._id.slice(-4).toUpperCase()}` : 'NEW ISSUE'}
+            </span>
+          </div>
           <button 
             onClick={onClose}
-            className="p-2 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+            className="p-1.5 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Content */}
-        <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar">
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
           <form id="task-form" onSubmit={handleSubmit} className="space-y-6">
             
+            {/* Title */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Title</label>
               <input
                 type="text"
-                required
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none font-medium"
+                autoFocus
+                placeholder="Issue title"
                 value={formData.title}
                 onChange={(e) => setFormData({...formData, title: e.target.value})}
-                placeholder="What needs to be done?"
+                className="w-full text-xl font-semibold text-gray-900 placeholder-gray-300 border-0 border-b border-transparent hover:border-gray-200 focus:border-gray-900 focus:ring-0 px-0 py-2 transition-colors bg-transparent"
               />
             </div>
 
+            {/* Description */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Description</label>
+              <div className="flex items-center text-sm font-medium text-gray-700 mb-2">
+                <AlignLeft className="w-4 h-4 mr-2 text-gray-400" /> Description
+              </div>
               <textarea
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none min-h-[120px] resize-y"
+                placeholder="Add a description..."
                 value={formData.description}
                 onChange={(e) => setFormData({...formData, description: e.target.value})}
-                placeholder="Add more details..."
+                className="w-full h-32 px-3 py-2 text-sm border border-gray-200 rounded-md focus:ring-1 focus:ring-gray-900 focus:border-gray-900 resize-none transition-colors"
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Priority</label>
-                <select
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none appearance-none"
-                  value={formData.priority}
-                  onChange={(e) => setFormData({...formData, priority: e.target.value})}
-                >
-                  <option value="low">Low Priority</option>
-                  <option value="med">Medium Priority</option>
-                  <option value="high">High Priority</option>
-                </select>
+            {/* AI Action Box */}
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 flex items-center justify-between">
+              <div className="flex items-center text-xs text-gray-600">
+                <Bot className="w-4 h-4 mr-2 text-indigo-500" />
+                <span>Auto-estimate effort & due date</span>
               </div>
+              <button
+                type="button"
+                onClick={handleGenerateClick}
+                disabled={isGenerating || !formData.title.trim()}
+                className="flex items-center px-3 py-1.5 bg-white border border-gray-200 text-xs font-medium text-gray-700 rounded-md hover:bg-gray-50 hover:border-gray-300 transition-colors shadow-sm disabled:opacity-50"
+              >
+                {isGenerating ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-400" />
+                ) : (
+                  <>
+                    <Sparkles className="w-3 h-3 mr-1.5 text-indigo-500" />
+                    Ask AI
+                  </>
+                )}
+              </button>
+            </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Status</label>
+            <div className="h-px bg-gray-100 my-6"></div>
+
+            {/* Properties */}
+            <div className="space-y-4">
+              <div className="flex items-center">
+                <div className="w-32 text-xs font-medium text-gray-500 flex items-center">Status</div>
                 <select
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none appearance-none"
                   value={formData.status}
                   onChange={(e) => setFormData({...formData, status: e.target.value})}
+                  className="flex-1 text-sm border border-gray-200 rounded-md py-1.5 px-2 focus:ring-1 focus:ring-gray-900 focus:border-gray-900"
                 >
                   <option value="todo">To Do</option>
                   <option value="in-progress">In Progress</option>
                   <option value="done">Done</option>
                 </select>
               </div>
-            </div>
 
-            {/* AI Assistant Section */}
-            <div className="mt-8 p-6 rounded-2xl bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-4 opacity-10">
-                <Bot className="w-24 h-24 text-indigo-600" />
+              <div className="flex items-center">
+                <div className="w-32 text-xs font-medium text-gray-500 flex items-center">
+                  <Flag className="w-3.5 h-3.5 mr-1.5" /> Priority
+                </div>
+                <select
+                  value={formData.priority}
+                  onChange={(e) => setFormData({...formData, priority: e.target.value})}
+                  className="flex-1 text-sm border border-gray-200 rounded-md py-1.5 px-2 focus:ring-1 focus:ring-gray-900 focus:border-gray-900"
+                >
+                  <option value="low">Low</option>
+                  <option value="med">Medium</option>
+                  <option value="high">High</option>
+                </select>
               </div>
-              
-              <div className="relative z-10">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
-                  <h3 className="text-sm font-bold text-indigo-900 flex items-center uppercase tracking-wider">
-                    <Sparkles className="w-5 h-5 mr-2 text-indigo-600" /> 
-                    AI Auto-Estimator
-                  </h3>
-                  <button
-                    type="button"
-                    onClick={() => suggestEstimate.mutate()}
-                    disabled={!formData.title || suggestEstimate.isPending}
-                    className="flex items-center px-4 py-2 text-sm font-semibold rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition-colors shadow-md shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {suggestEstimate.isPending ? (
-                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analyzing...</>
-                    ) : (
-                      'Generate Estimates'
-                    )}
-                  </button>
-                </div>
 
-                {aiError && <p className="text-red-500 text-sm mb-4 bg-red-50 p-2 rounded-lg border border-red-100">{aiError}</p>}
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-indigo-800 mb-1 uppercase tracking-wider">Due Date</label>
-                    <input
-                      type="date"
-                      className="w-full px-3 py-2 rounded-lg border border-indigo-200 bg-white/80 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-sm font-medium"
-                      value={formData.dueDate}
-                      onChange={(e) => setFormData({...formData, dueDate: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-indigo-800 mb-1 uppercase tracking-wider">Estimated Effort</label>
-                    <input
-                      type="text"
-                      className="w-full px-3 py-2 rounded-lg border border-indigo-200 bg-white/80 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-sm font-medium"
-                      placeholder="e.g. 2 hours"
-                      value={formData.estimatedEffort}
-                      onChange={(e) => setFormData({...formData, estimatedEffort: e.target.value})}
-                    />
-                  </div>
+              <div className="flex items-center">
+                <div className="w-32 text-xs font-medium text-gray-500 flex items-center">
+                  <CalendarDays className="w-3.5 h-3.5 mr-1.5" /> Due Date
                 </div>
+                <input
+                  type="date"
+                  value={formData.dueDate}
+                  onChange={(e) => setFormData({...formData, dueDate: e.target.value})}
+                  className="flex-1 text-sm border border-gray-200 rounded-md py-1.5 px-2 focus:ring-1 focus:ring-gray-900 focus:border-gray-900"
+                />
+              </div>
+
+              <div className="flex items-center">
+                <div className="w-32 text-xs font-medium text-gray-500 flex items-center">Estimate</div>
+                <input
+                  type="text"
+                  placeholder="e.g., 2h, 1d"
+                  value={formData.estimatedEffort}
+                  onChange={(e) => setFormData({...formData, estimatedEffort: e.target.value})}
+                  className="flex-1 text-sm border border-gray-200 rounded-md py-1.5 px-2 focus:ring-1 focus:ring-gray-900 focus:border-gray-900"
+                />
               </div>
             </div>
 
@@ -215,23 +247,42 @@ const TaskModal = ({ isOpen, onClose, boardId, taskToEdit }) => {
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex justify-end space-x-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-6 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-semibold hover:bg-gray-100 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            form="task-form"
-            disabled={saveTask.isPending}
-            className="px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 disabled:opacity-70"
-          >
-            {saveTask.isPending ? 'Saving...' : (taskToEdit ? 'Save Changes' : 'Create Task')}
-          </button>
+        <div className="p-4 border-t border-gray-100 flex justify-between bg-gray-50/50">
+          {taskToEdit ? (
+            <button
+              type="button"
+              onClick={() => {
+                if (confirm('Are you sure you want to delete this task?')) {
+                  deleteTask.mutate();
+                }
+              }}
+              className="px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 rounded-md transition-colors"
+            >
+              Delete
+            </button>
+          ) : (
+            <div></div> // empty div for flex spacing
+          )}
+          
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-md hover:bg-gray-50 hover:text-gray-900 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              form="task-form"
+              disabled={saveTask.isPending || !formData.title.trim()}
+              className="px-4 py-2 text-xs font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800 transition-colors disabled:opacity-50 shadow-sm"
+            >
+              {saveTask.isPending ? 'Saving...' : taskToEdit ? 'Save Changes' : 'Create Issue'}
+            </button>
+          </div>
         </div>
+
       </div>
     </div>
   );

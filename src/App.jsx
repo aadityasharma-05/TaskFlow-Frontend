@@ -6,6 +6,8 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import BoardView from './pages/BoardView';
 
+import Layout from './components/Layout';
+
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return <div className="h-screen flex items-center justify-center">Loading...</div>;
@@ -15,7 +17,7 @@ const ProtectedRoute = ({ children }) => {
 
 const App = () => {
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 font-sans">
+    <div className="min-h-screen bg-white text-gray-900 font-sans">
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -23,7 +25,9 @@ const App = () => {
           path="/" 
           element={
             <ProtectedRoute>
-              <Dashboard />
+              <Layout>
+                <Dashboard />
+              </Layout>
             </ProtectedRoute>
           } 
         />
@@ -31,7 +35,9 @@ const App = () => {
           path="/boards/:boardId" 
           element={
             <ProtectedRoute>
-              <BoardView />
+              <Layout>
+                <BoardView />
+              </Layout>
             </ProtectedRoute>
           } 
         />
