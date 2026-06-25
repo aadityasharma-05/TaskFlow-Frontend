@@ -75,7 +75,7 @@ This frontend integrates an AI Auto-Estimator inside the Task Modal.
 When a user enters a Task Title and Description, they can click "Generate Estimates". The frontend triggers an API call to the backend, which forwards the request to **Groq (Llama 3.1 8b)**. The resulting JSON payload automatically populates the "Due Date" and "Estimated Effort" input fields, eliminating manual data entry overhead.
 
 ## 🔗 Links & Credentials
-- **Frontend Live Demo:** `[Insert Render Frontend URL Here]`
+- **Frontend Live Demo:** [https://taskflowmanger.netlify.app](https://taskflowmanger.netlify.app)
 - **Backend Live API:** `[Insert Render Backend URL Here]`
 - **Test Credentials:** 
   - Email: `test@test.com`

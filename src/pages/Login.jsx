@@ -39,7 +39,7 @@ const Login = () => {
         <div className="w-full lg:w-1/2 text-center lg:text-left pt-10 lg:pt-0">
           <div className="inline-flex items-center px-4 py-2 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 font-semibold text-sm mb-6 shadow-sm">
             <Sparkles className="w-4 h-4 mr-2 text-indigo-500" />
-            Now with Llama-3 AI Estimations
+            Now with GROQ AI Estimations
           </div>
           
           <h1 className="text-5xl lg:text-6xl font-extrabold text-slate-900 font-heading mb-6 tracking-tight leading-tight">
@@ -50,7 +50,7 @@ const Login = () => {
           </h1>
           
           <p className="text-lg text-slate-600 mb-10 max-w-lg mx-auto lg:mx-0 font-medium leading-relaxed">
-            TaskFlow is the ultimate intelligent workspace. Plan, track, and collaborate on your projects with AI-powered task estimates and an intuitive drag-and-drop interface.
+            TaskFlow is the ultimate intelligent workspace. Plan, track on projects with AI-powered task estimates and an intuitive drag-and-drop interface.
           </p>
           
           {/* Feature Highlights */}
